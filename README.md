@@ -198,3 +198,4 @@ The server uses the following environment variables for configuration:
 - Use a proper `.env` file to manage sensitive environment variables.
 - The server uses `Socket.IO` for real-time communication and listens for PostgreSQL notifications to broadcast updates.
 # study_tool
+# study_tool
