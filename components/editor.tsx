@@ -3,7 +3,7 @@ import Editor from "@monaco-editor/react";
 
 export default function CodeEditor({ value, onChange, language, toggleMaximize , closeOutput}) {
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full ">
       <Editor
         height="100%"
         defaultLanguage={language || "javascript"}

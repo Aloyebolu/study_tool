@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectDB, disconnectDB, query } from "@/lib/db";
 import { NextResponse } from "next/server";
