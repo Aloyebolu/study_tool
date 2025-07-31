@@ -9,6 +9,15 @@ export async function GET(req: Request) {
   const fileId = url.pathname.split("/").pop();
 
   try {
+
+    // Check if file exists
+    const fileExists = await query(
+      `SELECT id FROM files WHERE id = $1`,
+      [fileId]
+    );
+    if (fileExists.length === 0) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
     await connectDB();
     const result = await query(
       `SELECT files.*, file_contents.content FROM files
@@ -26,3 +35,31 @@ export async function GET(req: Request) {
     await disconnectDB();
   }
 }
+
+// app/api/files/[id]/route.ts
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
+  const fileId = params.id;
+  const { content } = await req.json();
+  console.log(content)
+  try {
+    await connectDB();
+await query(
+  `
+  INSERT INTO file_contents (file_id, content, updated_at)
+  VALUES ($1, $2, NOW())
+  ON CONFLICT (file_id) 
+  DO UPDATE SET content = EXCLUDED.content, updated_at = NOW()
+  `,
+  [fileId, content]
+);
+
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    return NextResponse.json({ error: "Failed to update file" }, { status: 500 });
+  } finally {
+    await disconnectDB();
+  }
+}
+
