@@ -9,14 +9,18 @@ export async function GET(req: Request) {
   // Extract fileId from the URL
   const url = new URL(req.url);
   const fileId = url.pathname.split("/").pop();
-
+  console.log(fileId)
+  if (!fileId) {
+    return NextResponse.json({ error: "File ID is required" }, { status: 400 });
+  }
   try {
-
+connectDB()
     // Check if file exists
     const fileExists = await query(
       `SELECT id FROM files WHERE id = $1`,
       [fileId]
     );
+    console.log(fileExists)
     if (fileExists.length === 0) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
