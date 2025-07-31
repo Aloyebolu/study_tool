@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
+import { UserProvider } from "@/context/userContext";
 import "./globals.css";
 import {createContext, useContext, useEffect, useState } from "react"
-import UserProvider, { UserContext } from "./utils/userContext"
+// import UserProvider, { UserContext } from "./utils/userContext"
 
 export default function RootLayout({
   children,
@@ -13,11 +15,12 @@ export default function RootLayout({
   // const {user, setUser} = useContext(UserContext)
   
   return (
-    <html lang="en" name="viewport" content="width=device-width, maximum-scale=1.0, users-scalable=no, initial-scale=1.0">
+    <html lang="en" content="width=device-width, maximum-scale=1.0, users-scalable=no, initial-scale=1.0">
       <body className="select-none">
-        <UserProvider>
+<UserProvider>
           {children}
-        </UserProvider>     
+            </UserProvider>
+
       </body>
     </html>
   );

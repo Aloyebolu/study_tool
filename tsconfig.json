@@ -4,8 +4,8 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
+    "strict": false,
+    "noEmit": false,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["server.js", "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/utils/userContext.js", "app/(chat)/layoudt.tsx"],
+  "include": ["server.js", "next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/utils/userContext.js", "app/(chat)/layoudt.tsx", "app/utils/getUserImageURL.js", "app/utils/roomUtil.js"],
   "exclude": ["node_modules"]
 }

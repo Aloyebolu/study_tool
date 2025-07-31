@@ -1,4 +1,4 @@
-import { query, connectDB, disconnectDB } from '@/app/lib/db';
+import { query, connectDB, disconnectDB } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Handle POST requests
