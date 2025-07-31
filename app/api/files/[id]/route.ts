@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { connectDB, disconnectDB, query } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { url } from "node:inspector/promises";
 
 // app/api/files/[id]/route.ts
 export async function GET(req: Request) {
@@ -37,8 +38,11 @@ export async function GET(req: Request) {
 }
 
 // app/api/files/[id]/route.ts
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const fileId = params.id;
+export async function PUT(req: Request) {
+  // Extract fileId from the URL
+  const url = new URL(req.url);
+  const fileId = url.pathname.split("/").pop();
+
   const { content } = await req.json();
   console.log(content)
   try {
