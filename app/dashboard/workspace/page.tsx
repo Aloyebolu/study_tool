@@ -12,6 +12,7 @@ import clsx from 'clsx';
 import { FolderTree } from '@/components/FolderTree';
 import CreateMenu from '@/components/CreateMenu';
 import OutputViewer from '@/components/OutputViewer';
+import { useUser } from '@/context/userContext';
 
 const CodeEditor = dynamic(() => import('@/components/editor'), { ssr: false });
 
@@ -25,11 +26,29 @@ export default function WorkspacePage(onToggleFull) {
   const [outputWidth, setOutputWidth] = useState(50);
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const {token} = useUser()
   const saveTimeout = useRef(null);
   const isResizing = useRef(false);
 
+
+    const fetchFiles = async () => {
+    if (!token) {
+      console.error('No token provided');
+      return;
+    }
+    try {
+      const res = await fetch('/api/files', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      setFiles(data.data);
+    } catch { }
+  };
   useEffect(() => {
+  if (!token) return; // Wait until token is available
     fetchFiles();
     document.addEventListener('mousemove', handleResize);
     document.addEventListener('mouseup', () => (isResizing.current = false));
@@ -37,7 +56,7 @@ export default function WorkspacePage(onToggleFull) {
       document.removeEventListener('mousemove', handleResize);
       document.removeEventListener('mouseup', () => (isResizing.current = false));
     };
-  }, []);
+  }, [token]);
 
   const handleResize = (e: MouseEvent) => {
     if (!isResizing.current) return;
@@ -50,19 +69,18 @@ export default function WorkspacePage(onToggleFull) {
     }
   };
 
-  const fetchFiles = async () => {
-    try {
-      const res = await fetch('/api/files');
-      const data = await res.json();
-      setFiles(data.data);
-    } catch { }
-  };
+
 
   const createFile = async (type: string, parent_id: string, file_type?: string) => {
     const name = prompt('Enter file name:');
     if (!name) return;
     try {
       const res = await fetch('/api/files', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+
+        },
         method: 'POST',
         body: JSON.stringify({ name, file_type, type, parent_id }),
       });
@@ -124,7 +142,14 @@ export default function WorkspacePage(onToggleFull) {
 
   const fetchFolderData = async (folderId = null) => {
     const url = folderId ? `/api/files?parent_id=${encodeURIComponent(folderId)}` : `/api/files`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+
+      headers: {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${token}`,
+},
+    }
+    );
     if (!res.ok) throw new Error('Failed to fetch');
     const data = await res.json();
     return data.data;
@@ -162,10 +187,15 @@ export default function WorkspacePage(onToggleFull) {
 
         <div id="editor-wrapper" className="flex-1 relative overflow-hidden flex flex-col md:flex-row">
           {/* Editor */}
-          <div className={clsx(
-            'flex-1 overflow-auto ',
-            showOutput && !isOutputMaximized && 'md:w-[calc(100%-' + outputWidth + '%)]'
-          )}>
+<div
+  className="flex-1 overflow-auto"
+  style={
+    showOutput && !isOutputMaximized
+      ? { width: `calc(100% - ${outputWidth}%)` }
+      : undefined
+  }
+>
+
             <div className="p-2 flex justify-between items-center border-b bg-#151515-100">
               <div className="flex items-center gap-2">
                 <div className="font-medium">

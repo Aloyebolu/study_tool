@@ -64,6 +64,15 @@ export default function OutputViewer({ code, path }) {
   useEffect(() => {
     updateIframe();
   }, [currentIndex]);
+// Detect external code updates
+useEffect(() => {
+  const current = history[currentIndex];
+  if (code !== current.code || path !== current.path) {
+    const newHistory = [...history];
+    newHistory[currentIndex] = { path, code };
+    setHistory(newHistory);
+  }
+}, [code, path]);
 
   // Handle internal iframe link clicks
   useEffect(() => {

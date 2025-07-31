@@ -11,7 +11,7 @@ import { useUser } from '@/context/userContext';
 
 export default function Topbar() {
   const { toggle } = useSidebar();
-  const { user } = useUser()
+  const { token: user } = useUser()
   const logout = useLogout();
 
   return (

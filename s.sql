@@ -5,7 +5,7 @@
 -- Dumped from database version 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1)
 
--- Started on 2025-07-29 20:35:18 WAT
+-- Started on 2025-07-31 06:17:57 WAT
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,133 +19,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 245 (class 1255 OID 16389)
--- Name: notify_change(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.notify_change() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$DECLARE
-  payload JSON;
-BEGIN
- IF (TG_OP = 'INSERT') THEN
-    payload := json_build_object(
-      'type', 'insert',
-      'conversation_id', NEW.conversation_id,
-      'data', row_to_json(NEW)
-    );
-ELSIF (TG_OP = 'UPDATE') THEN
-    payload := json_build_object(
-      'type', 'update',
-      'conversation_id', NEW.conversation_id,
-      'data', row_to_json(NEW)
-    );
-ELSIF (TG_OP = 'DELETE') THEN
-    payload := json_build_object(
-      'type', 'delete',
-      'conversation_id', OLD.conversation_id,
-      'data', row_to_json(OLD)
-    );
-END IF;
-
-
-  PERFORM pg_notify('notify_change', payload::text); -- Make sure this matches what you're LISTENing to
-  RETURN NEW;
-END;
-$$;
-
-
-SET default_table_access_method = heap;
-
---
--- TOC entry 244 (class 1259 OID 24621)
--- Name: badges; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.badges (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    user_id bigint NOT NULL,
-    type text NOT NULL,
-    expires_at timestamp without time zone,
-    created_at timestamp without time zone DEFAULT now()
-);
-
-
---
--- TOC entry 215 (class 1259 OID 16403)
--- Name: blocked_users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.blocked_users (
-    id integer NOT NULL,
-    blocker_id bigint NOT NULL,
-    blocked_id bigint NOT NULL,
-    created_at timestamp without time zone DEFAULT now()
-);
-
-
---
--- TOC entry 216 (class 1259 OID 16407)
--- Name: blocked_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.blocked_users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- TOC entry 3610 (class 0 OID 0)
--- Dependencies: 216
--- Name: blocked_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.blocked_users_id_seq OWNED BY public.blocked_users.id;
-
-
---
--- TOC entry 232 (class 1259 OID 16474)
--- Name: room_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.room_roles (
-    id integer NOT NULL,
-    room_id integer,
-    user_id integer,
-    role character varying(20) DEFAULT 'viewer'::character varying,
-    joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    raised_hand boolean DEFAULT false,
-    is_muted boolean DEFAULT false,
-    status character varying DEFAULT 'inside'::character varying,
-    "position" integer
-);
-
-
---
--- TOC entry 243 (class 1259 OID 24580)
--- Name: c; Type: MATERIALIZED VIEW; Schema: public; Owner: -
---
-
-CREATE MATERIALIZED VIEW public.c AS
- SELECT id,
-    room_id,
-    user_id,
-    role,
-    joined_at,
-    raised_hand,
-    is_muted,
-    status,
-    "position"
-   FROM public.room_roles
-  WITH NO DATA;
-
-
---
--- TOC entry 217 (class 1259 OID 16408)
+-- TOC entry 215 (class 1259 OID 32885)
 -- Name: global_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -158,7 +32,7 @@ CREATE SEQUENCE public.global_id_seq
 
 
 --
--- TOC entry 218 (class 1259 OID 16409)
+-- TOC entry 216 (class 1259 OID 32886)
 -- Name: conversation_participants; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -173,7 +47,7 @@ CREATE TABLE public.conversation_participants (
 
 
 --
--- TOC entry 219 (class 1259 OID 16418)
+-- TOC entry 217 (class 1259 OID 32895)
 -- Name: conversations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -189,24 +63,24 @@ CREATE TABLE public.conversations (
 
 
 --
--- TOC entry 220 (class 1259 OID 16429)
--- Name: followers; Type: TABLE; Schema: public; Owner: -
+-- TOC entry 225 (class 1259 OID 32981)
+-- Name: courses; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.followers (
+CREATE TABLE public.courses (
     id integer NOT NULL,
-    user_id integer NOT NULL,
-    follower_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT now()
+    title character varying(100) NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
 --
--- TOC entry 221 (class 1259 OID 16433)
--- Name: followers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- TOC entry 224 (class 1259 OID 32980)
+-- Name: courses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.followers_id_seq
+CREATE SEQUENCE public.courses_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -216,32 +90,35 @@ CREATE SEQUENCE public.followers_id_seq
 
 
 --
--- TOC entry 3611 (class 0 OID 0)
--- Dependencies: 221
--- Name: followers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- TOC entry 3569 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: courses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.followers_id_seq OWNED BY public.followers.id;
+ALTER SEQUENCE public.courses_id_seq OWNED BY public.courses.id;
 
 
 --
--- TOC entry 222 (class 1259 OID 16434)
--- Name: images; Type: TABLE; Schema: public; Owner: -
+-- TOC entry 231 (class 1259 OID 33021)
+-- Name: file_contents; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.images (
-    id integer DEFAULT nextval('public.global_id_seq'::regclass) NOT NULL,
-    image_data bytea,
-    user_id bigint
+CREATE TABLE public.file_contents (
+    id integer NOT NULL,
+    file_id integer,
+    title character varying(100),
+    content text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at date
 );
 
 
 --
--- TOC entry 223 (class 1259 OID 16440)
--- Name: images_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- TOC entry 230 (class 1259 OID 33020)
+-- Name: file_contents_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.images_id_seq
+CREATE SEQUENCE public.file_contents_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -251,16 +128,106 @@ CREATE SEQUENCE public.images_id_seq
 
 
 --
--- TOC entry 3612 (class 0 OID 0)
--- Dependencies: 223
--- Name: images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- TOC entry 3570 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: file_contents_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.images_id_seq OWNED BY public.images.id;
+ALTER SEQUENCE public.file_contents_id_seq OWNED BY public.file_contents.id;
 
 
 --
--- TOC entry 224 (class 1259 OID 16441)
+-- TOC entry 238 (class 1259 OID 33109)
+-- Name: global_files_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.global_files_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 229 (class 1259 OID 33006)
+-- Name: files; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.files (
+    id integer DEFAULT nextval('public.global_files_seq'::regclass) NOT NULL,
+    user_id integer,
+    type character varying,
+    name character varying(100),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    parent_id bigint,
+    path text
+);
+
+
+--
+-- TOC entry 228 (class 1259 OID 33005)
+-- Name: files_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.files_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 3571 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: files_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.files_id_seq OWNED BY public.files.id;
+
+
+--
+-- TOC entry 237 (class 1259 OID 33090)
+-- Name: folders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.folders (
+    id integer DEFAULT nextval('public.global_files_seq'::regclass) NOT NULL,
+    name text NOT NULL,
+    parent_id bigint,
+    user_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    path text
+);
+
+
+--
+-- TOC entry 236 (class 1259 OID 33089)
+-- Name: folders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.folders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 3572 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: folders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.folders_id_seq OWNED BY public.folders.id;
+
+
+--
+-- TOC entry 218 (class 1259 OID 32906)
 -- Name: messages; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -278,7 +245,7 @@ CREATE TABLE public.messages (
 
 
 --
--- TOC entry 225 (class 1259 OID 16450)
+-- TOC entry 219 (class 1259 OID 32913)
 -- Name: messages_last_read; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -292,99 +259,24 @@ CREATE TABLE public.messages_last_read (
 
 
 --
--- TOC entry 226 (class 1259 OID 16455)
--- Name: profile_views; Type: TABLE; Schema: public; Owner: -
+-- TOC entry 235 (class 1259 OID 33075)
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.profile_views (
+CREATE TABLE public.projects (
     id integer NOT NULL,
-    profile_owner_id bigint NOT NULL,
-    viewer_id bigint NOT NULL,
-    viewed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
---
--- TOC entry 227 (class 1259 OID 16459)
--- Name: profile_views_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.profile_views_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- TOC entry 3613 (class 0 OID 0)
--- Dependencies: 227
--- Name: profile_views_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.profile_views_id_seq OWNED BY public.profile_views.id;
-
-
---
--- TOC entry 228 (class 1259 OID 16460)
--- Name: room_events_log; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.room_events_log (
-    id integer NOT NULL,
-    room_id integer,
-    user_id integer,
-    event_type text,
-    event_detail text,
-    event_time timestamp without time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
---
--- TOC entry 229 (class 1259 OID 16466)
--- Name: room_events_log_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.room_events_log_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- TOC entry 3614 (class 0 OID 0)
--- Dependencies: 229
--- Name: room_events_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.room_events_log_id_seq OWNED BY public.room_events_log.id;
-
-
---
--- TOC entry 230 (class 1259 OID 16467)
--- Name: room_messages; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.room_messages (
-    id integer NOT NULL,
-    room_id integer,
-    sender_id integer,
-    message text,
+    user_id integer NOT NULL,
+    name text NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
 --
--- TOC entry 231 (class 1259 OID 16473)
--- Name: room_messages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- TOC entry 234 (class 1259 OID 33074)
+-- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.room_messages_id_seq
+CREATE SEQUENCE public.projects_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -394,64 +286,35 @@ CREATE SEQUENCE public.room_messages_id_seq
 
 
 --
--- TOC entry 3615 (class 0 OID 0)
--- Dependencies: 231
--- Name: room_messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- TOC entry 3573 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: projects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.room_messages_id_seq OWNED BY public.room_messages.id;
-
-
---
--- TOC entry 233 (class 1259 OID 16484)
--- Name: room_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.room_roles_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER SEQUENCE public.projects_id_seq OWNED BY public.projects.id;
 
 
 --
--- TOC entry 3616 (class 0 OID 0)
--- Dependencies: 233
--- Name: room_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- TOC entry 227 (class 1259 OID 32991)
+-- Name: sections; Type: TABLE; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.room_roles_id_seq OWNED BY public.room_roles.id;
-
-
---
--- TOC entry 234 (class 1259 OID 16485)
--- Name: rooms; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.rooms (
+CREATE TABLE public.sections (
     id integer NOT NULL,
-    type text,
-    room_description text,
-    room_status character varying(20) DEFAULT 'live'::character varying,
-    room_type character varying(20),
-    max_participants integer DEFAULT 100,
-    is_recorded boolean DEFAULT false,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    started_at timestamp without time zone,
-    ended_at timestamp without time zone,
-    tag text,
-    messaging_status text
+    course_id integer,
+    title character varying(100),
+    description text,
+    code text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
 --
--- TOC entry 235 (class 1259 OID 16494)
--- Name: rooms_room_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- TOC entry 226 (class 1259 OID 32990)
+-- Name: sections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.rooms_room_id_seq
+CREATE SEQUENCE public.sections_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -461,50 +324,16 @@ CREATE SEQUENCE public.rooms_room_id_seq
 
 
 --
--- TOC entry 3617 (class 0 OID 0)
--- Dependencies: 235
--- Name: rooms_room_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- TOC entry 3574 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: sections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.rooms_room_id_seq OWNED BY public.rooms.id;
-
-
---
--- TOC entry 236 (class 1259 OID 16495)
--- Name: to_do; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.to_do (
-    value character(200),
-    id integer NOT NULL
-);
+ALTER SEQUENCE public.sections_id_seq OWNED BY public.sections.id;
 
 
 --
--- TOC entry 237 (class 1259 OID 16498)
--- Name: to_do_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.to_do_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- TOC entry 3618 (class 0 OID 0)
--- Dependencies: 237
--- Name: to_do_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.to_do_id_seq OWNED BY public.to_do.id;
-
-
---
--- TOC entry 238 (class 1259 OID 16499)
+-- TOC entry 220 (class 1259 OID 32918)
 -- Name: unread_messages_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -518,8 +347,8 @@ CREATE SEQUENCE public.unread_messages_id_seq
 
 
 --
--- TOC entry 3619 (class 0 OID 0)
--- Dependencies: 238
+-- TOC entry 3575 (class 0 OID 0)
+-- Dependencies: 220
 -- Name: unread_messages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
@@ -527,7 +356,7 @@ ALTER SEQUENCE public.unread_messages_id_seq OWNED BY public.messages_last_read.
 
 
 --
--- TOC entry 239 (class 1259 OID 16500)
+-- TOC entry 221 (class 1259 OID 32919)
 -- Name: user_images; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -541,7 +370,7 @@ CREATE TABLE public.user_images (
 
 
 --
--- TOC entry 240 (class 1259 OID 16507)
+-- TOC entry 222 (class 1259 OID 32926)
 -- Name: user_images_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -555,8 +384,8 @@ CREATE SEQUENCE public.user_images_id_seq
 
 
 --
--- TOC entry 3620 (class 0 OID 0)
--- Dependencies: 240
+-- TOC entry 3576 (class 0 OID 0)
+-- Dependencies: 222
 -- Name: user_images_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
@@ -564,7 +393,45 @@ ALTER SEQUENCE public.user_images_id_seq OWNED BY public.user_images.id;
 
 
 --
--- TOC entry 241 (class 1259 OID 16508)
+-- TOC entry 233 (class 1259 OID 33056)
+-- Name: user_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_settings (
+    id integer NOT NULL,
+    user_id bigint,
+    setting_key text NOT NULL,
+    setting_value jsonb NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+--
+-- TOC entry 232 (class 1259 OID 33055)
+-- Name: user_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.user_settings_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- TOC entry 3577 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: user_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.user_settings_id_seq OWNED BY public.user_settings.id;
+
+
+--
+-- TOC entry 223 (class 1259 OID 32927)
 -- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -584,36 +451,23 @@ CREATE TABLE public.users (
 
 
 --
--- TOC entry 242 (class 1259 OID 16515)
--- Name: your_table_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- TOC entry 3359 (class 2604 OID 32984)
+-- Name: courses id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.your_table_id_seq
-    START WITH 10000000
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER TABLE ONLY public.courses ALTER COLUMN id SET DEFAULT nextval('public.courses_id_seq'::regclass);
 
 
 --
--- TOC entry 3360 (class 2604 OID 16518)
--- Name: blocked_users id; Type: DEFAULT; Schema: public; Owner: -
+-- TOC entry 3365 (class 2604 OID 33024)
+-- Name: file_contents id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.blocked_users ALTER COLUMN id SET DEFAULT nextval('public.blocked_users_id_seq'::regclass);
-
-
---
--- TOC entry 3370 (class 2604 OID 16519)
--- Name: followers id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.followers ALTER COLUMN id SET DEFAULT nextval('public.followers_id_seq'::regclass);
+ALTER TABLE ONLY public.file_contents ALTER COLUMN id SET DEFAULT nextval('public.file_contents_id_seq'::regclass);
 
 
 --
--- TOC entry 3375 (class 2604 OID 16520)
+-- TOC entry 3351 (class 2604 OID 32934)
 -- Name: messages_last_read id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -621,55 +475,23 @@ ALTER TABLE ONLY public.messages_last_read ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3378 (class 2604 OID 16521)
--- Name: profile_views id; Type: DEFAULT; Schema: public; Owner: -
+-- TOC entry 3370 (class 2604 OID 33078)
+-- Name: projects id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.profile_views ALTER COLUMN id SET DEFAULT nextval('public.profile_views_id_seq'::regclass);
-
-
---
--- TOC entry 3380 (class 2604 OID 16522)
--- Name: room_events_log id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_events_log ALTER COLUMN id SET DEFAULT nextval('public.room_events_log_id_seq'::regclass);
+ALTER TABLE ONLY public.projects ALTER COLUMN id SET DEFAULT nextval('public.projects_id_seq'::regclass);
 
 
 --
--- TOC entry 3382 (class 2604 OID 16523)
--- Name: room_messages id; Type: DEFAULT; Schema: public; Owner: -
+-- TOC entry 3361 (class 2604 OID 32994)
+-- Name: sections id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.room_messages ALTER COLUMN id SET DEFAULT nextval('public.room_messages_id_seq'::regclass);
-
-
---
--- TOC entry 3384 (class 2604 OID 16524)
--- Name: room_roles id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_roles ALTER COLUMN id SET DEFAULT nextval('public.room_roles_id_seq'::regclass);
+ALTER TABLE ONLY public.sections ALTER COLUMN id SET DEFAULT nextval('public.sections_id_seq'::regclass);
 
 
 --
--- TOC entry 3390 (class 2604 OID 16525)
--- Name: rooms id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.rooms ALTER COLUMN id SET DEFAULT nextval('public.rooms_room_id_seq'::regclass);
-
-
---
--- TOC entry 3395 (class 2604 OID 16526)
--- Name: to_do id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.to_do ALTER COLUMN id SET DEFAULT nextval('public.to_do_id_seq'::regclass);
-
-
---
--- TOC entry 3396 (class 2604 OID 16527)
+-- TOC entry 3354 (class 2604 OID 32935)
 -- Name: user_images id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -677,34 +499,15 @@ ALTER TABLE ONLY public.user_images ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3440 (class 2606 OID 24629)
--- Name: badges badges_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3367 (class 2604 OID 33059)
+-- Name: user_settings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.badges
-    ADD CONSTRAINT badges_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3406 (class 2606 OID 16537)
--- Name: blocked_users blocked_users_blocker_id_blocked_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_blocker_id_blocked_id_key UNIQUE (blocker_id, blocked_id);
+ALTER TABLE ONLY public.user_settings ALTER COLUMN id SET DEFAULT nextval('public.user_settings_id_seq'::regclass);
 
 
 --
--- TOC entry 3408 (class 2606 OID 16539)
--- Name: blocked_users blocked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3410 (class 2606 OID 16541)
+-- TOC entry 3377 (class 2606 OID 32937)
 -- Name: conversation_participants conversation_participants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -713,7 +516,7 @@ ALTER TABLE ONLY public.conversation_participants
 
 
 --
--- TOC entry 3412 (class 2606 OID 16543)
+-- TOC entry 3379 (class 2606 OID 32939)
 -- Name: conversations conversations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -722,25 +525,43 @@ ALTER TABLE ONLY public.conversations
 
 
 --
--- TOC entry 3414 (class 2606 OID 16545)
--- Name: followers followers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3391 (class 2606 OID 32989)
+-- Name: courses courses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.followers
-    ADD CONSTRAINT followers_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3416 (class 2606 OID 16547)
--- Name: images images_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.images
-    ADD CONSTRAINT images_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.courses
+    ADD CONSTRAINT courses_pkey PRIMARY KEY (id);
 
 
 --
--- TOC entry 3418 (class 2606 OID 16549)
+-- TOC entry 3397 (class 2606 OID 33029)
+-- Name: file_contents file_contents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.file_contents
+    ADD CONSTRAINT file_contents_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3395 (class 2606 OID 33014)
+-- Name: files files_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.files
+    ADD CONSTRAINT files_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3407 (class 2606 OID 33098)
+-- Name: folders folders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.folders
+    ADD CONSTRAINT folders_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3381 (class 2606 OID 32941)
 -- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -749,61 +570,34 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- TOC entry 3424 (class 2606 OID 16551)
--- Name: profile_views profile_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3405 (class 2606 OID 33083)
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.profile_views
-    ADD CONSTRAINT profile_views_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3426 (class 2606 OID 16553)
--- Name: room_events_log room_events_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_events_log
-    ADD CONSTRAINT room_events_log_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
 
 
 --
--- TOC entry 3428 (class 2606 OID 16555)
--- Name: room_messages room_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3393 (class 2606 OID 32999)
+-- Name: sections sections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.room_messages
-    ADD CONSTRAINT room_messages_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3430 (class 2606 OID 16557)
--- Name: room_roles room_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_roles
-    ADD CONSTRAINT room_roles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.sections
+    ADD CONSTRAINT sections_pkey PRIMARY KEY (id);
 
 
 --
--- TOC entry 3432 (class 2606 OID 16559)
--- Name: rooms rooms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3399 (class 2606 OID 33041)
+-- Name: file_contents unique_file_id; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.rooms
-    ADD CONSTRAINT rooms_pkey PRIMARY KEY (id);
-
-
---
--- TOC entry 3434 (class 2606 OID 16561)
--- Name: to_do to_do_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.to_do
-    ADD CONSTRAINT to_do_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.file_contents
+    ADD CONSTRAINT unique_file_id UNIQUE (file_id);
 
 
 --
--- TOC entry 3420 (class 2606 OID 16563)
+-- TOC entry 3383 (class 2606 OID 32943)
 -- Name: messages_last_read unique_user_convo; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -812,7 +606,7 @@ ALTER TABLE ONLY public.messages_last_read
 
 
 --
--- TOC entry 3422 (class 2606 OID 16565)
+-- TOC entry 3385 (class 2606 OID 32945)
 -- Name: messages_last_read unread_messages_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -821,7 +615,7 @@ ALTER TABLE ONLY public.messages_last_read
 
 
 --
--- TOC entry 3436 (class 2606 OID 16567)
+-- TOC entry 3387 (class 2606 OID 32947)
 -- Name: user_images user_images_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -830,7 +624,25 @@ ALTER TABLE ONLY public.user_images
 
 
 --
--- TOC entry 3438 (class 2606 OID 16569)
+-- TOC entry 3401 (class 2606 OID 33065)
+-- Name: user_settings user_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_settings
+    ADD CONSTRAINT user_settings_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 3403 (class 2606 OID 33067)
+-- Name: user_settings user_settings_user_id_setting_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_settings
+    ADD CONSTRAINT user_settings_user_id_setting_key_key UNIQUE (user_id, setting_key);
+
+
+--
+-- TOC entry 3389 (class 2606 OID 32949)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -839,42 +651,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3460 (class 2620 OID 16570)
--- Name: messages notify_change; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER notify_change AFTER INSERT OR DELETE OR UPDATE ON public.messages FOR EACH ROW EXECUTE FUNCTION public.notify_change();
-
-
---
--- TOC entry 3459 (class 2606 OID 24630)
--- Name: badges badges_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.badges
-    ADD CONSTRAINT badges_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3441 (class 2606 OID 16571)
--- Name: blocked_users blocked_users_blocked_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_blocked_id_fkey FOREIGN KEY (blocked_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3442 (class 2606 OID 16576)
--- Name: blocked_users blocked_users_blocker_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.blocked_users
-    ADD CONSTRAINT blocked_users_blocker_id_fkey FOREIGN KEY (blocker_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3443 (class 2606 OID 16581)
+-- TOC entry 3408 (class 2606 OID 32950)
 -- Name: conversation_participants conversation_participants_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -883,34 +660,43 @@ ALTER TABLE ONLY public.conversation_participants
 
 
 --
--- TOC entry 3450 (class 2606 OID 24597)
--- Name: profile_views fk_profile_owner; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3416 (class 2606 OID 33035)
+-- Name: file_contents file_contents_file_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.profile_views
-    ADD CONSTRAINT fk_profile_owner FOREIGN KEY (profile_owner_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3451 (class 2606 OID 24602)
--- Name: profile_views fk_viewer; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.profile_views
-    ADD CONSTRAINT fk_viewer FOREIGN KEY (viewer_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.file_contents
+    ADD CONSTRAINT file_contents_file_id_fkey FOREIGN KEY (file_id) REFERENCES public.files(id) ON DELETE CASCADE;
 
 
 --
--- TOC entry 3444 (class 2606 OID 16601)
--- Name: followers followers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3415 (class 2606 OID 33015)
+-- Name: files files_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.followers
-    ADD CONSTRAINT followers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE ONLY public.files
+    ADD CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
--- TOC entry 3446 (class 2606 OID 16606)
+-- TOC entry 3419 (class 2606 OID 33099)
+-- Name: folders folders_parent_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.folders
+    ADD CONSTRAINT folders_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.folders(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3420 (class 2606 OID 33104)
+-- Name: folders folders_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.folders
+    ADD CONSTRAINT folders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- TOC entry 3409 (class 2606 OID 32955)
 -- Name: messages messages_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -919,7 +705,7 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- TOC entry 3447 (class 2606 OID 16611)
+-- TOC entry 3410 (class 2606 OID 32960)
 -- Name: messages messages_reply_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -928,61 +714,25 @@ ALTER TABLE ONLY public.messages
 
 
 --
--- TOC entry 3452 (class 2606 OID 16616)
--- Name: room_events_log room_events_log_room_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3418 (class 2606 OID 33084)
+-- Name: projects projects_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.room_events_log
-    ADD CONSTRAINT room_events_log_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id);
-
-
---
--- TOC entry 3453 (class 2606 OID 16621)
--- Name: room_events_log room_events_log_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_events_log
-    ADD CONSTRAINT room_events_log_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
--- TOC entry 3454 (class 2606 OID 16626)
--- Name: room_messages room_messages_room_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- TOC entry 3414 (class 2606 OID 33000)
+-- Name: sections sections_course_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.room_messages
-    ADD CONSTRAINT room_messages_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id);
-
-
---
--- TOC entry 3455 (class 2606 OID 16631)
--- Name: room_messages room_messages_sender_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_messages
-    ADD CONSTRAINT room_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id);
+ALTER TABLE ONLY public.sections
+    ADD CONSTRAINT sections_course_id_fkey FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE CASCADE;
 
 
 --
--- TOC entry 3456 (class 2606 OID 24607)
--- Name: room_roles room_roles_room_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_roles
-    ADD CONSTRAINT room_roles_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.rooms(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3457 (class 2606 OID 16641)
--- Name: room_roles room_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.room_roles
-    ADD CONSTRAINT room_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
-
-
---
--- TOC entry 3448 (class 2606 OID 16646)
+-- TOC entry 3411 (class 2606 OID 32965)
 -- Name: messages_last_read unread_messages_conversation_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -991,7 +741,7 @@ ALTER TABLE ONLY public.messages_last_read
 
 
 --
--- TOC entry 3449 (class 2606 OID 16651)
+-- TOC entry 3412 (class 2606 OID 32970)
 -- Name: messages_last_read unread_messages_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1000,16 +750,7 @@ ALTER TABLE ONLY public.messages_last_read
 
 
 --
--- TOC entry 3445 (class 2606 OID 16656)
--- Name: images user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.images
-    ADD CONSTRAINT user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3458 (class 2606 OID 24592)
+-- TOC entry 3413 (class 2606 OID 32975)
 -- Name: user_images user_images_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1017,7 +758,16 @@ ALTER TABLE ONLY public.user_images
     ADD CONSTRAINT user_images_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
--- Completed on 2025-07-29 20:35:20 WAT
+--
+-- TOC entry 3417 (class 2606 OID 33068)
+-- Name: user_settings user_settings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_settings
+    ADD CONSTRAINT user_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+-- Completed on 2025-07-31 06:17:58 WAT
 
 --
 -- PostgreSQL database dump complete

@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   // const user_id = searchParams.get('user_id');
     const {userId : user_id} = getUserIdFromRequest(req)
 
-
+ console.log(user_id)
   const parent_id = searchParams.get("parent_id")
   console.log(parent_id)
   if (!user_id) {

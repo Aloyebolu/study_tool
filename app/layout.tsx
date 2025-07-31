@@ -17,9 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" content="width=device-width, maximum-scale=1.0, users-scalable=no, initial-scale=1.0">
       <body className="select-none">
-<UserProvider>
           {children}
-            </UserProvider>
 
       </body>
     </html>

@@ -31,7 +31,7 @@ export default function RegisterPage() {
       }
   
       // localStorage.setItem('token', data.token);
-      router.push('auth/login');
+      router.push('login');
     } catch (err : any) {
       setError(err.message);
     } finally {
@@ -105,7 +105,7 @@ export default function RegisterPage() {
         </div>
 
         <p className="text-sm text-center text-gray-500 mt-6">
-          Already have an account? <a href="/login" className="text-indigo-600 underline">Login</a>
+          Already have an account? <a href="login" className="text-indigo-600 underline">Login</a>
         </p>
       </div>
     </div>

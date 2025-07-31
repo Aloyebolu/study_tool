@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // context/UserContext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 type UserType = { userId: string | null; token: string | null };
 
-const UserContext = createContext<{ user: UserType; setUser: React.Dispatch<React.SetStateAction<UserType>> } | undefined>(undefined);
+const UserContext = createContext<{
+  token: any; user: UserType; setUser: React.Dispatch<React.SetStateAction<UserType>> 
+} | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserType>({ userId: null, token: null });
@@ -26,7 +29,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     loadUser();
   }, [router]);
 
-  return <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>;
+  return <UserContext.Provider value={{ token: user.token, user, setUser }}>{children}</UserContext.Provider>;
 };
 
 export const useUser = () => {

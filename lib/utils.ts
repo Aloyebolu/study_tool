@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
 // Load secret key from environment variables
-const SECRET_KEY = "secret-key";
+const SECRET_KEY = "secret_key";
 
 // Define the expected shape of the JWT payload
 interface JwtPayload {
@@ -48,15 +48,16 @@ export function getUserIdFromRequest(request: NextRequest): {
   const authHeader = request.headers.get("Authorization");
   const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
 
+  console.log("🔐 Verifying token:", token);
   if (!token) {
     return {
       userId: null,
       response: setCorsHeaders(NextResponse.json({ error: "Unauthorized: Token missing" }, { status: 401 })),
     };
   }
-
   const { valid, decoded, response } = verifyTokenWithSecret(token);
   if (!valid || !decoded) {
+    console.error("🔐 Token verification failed:", response?.body);
     return {
       userId: null,
       response: response ?? setCorsHeaders(NextResponse.json({ error: "Unauthorized: Invalid token" }, { status: 401 })),

@@ -176,6 +176,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   //   return null;
   // }
   return (
+ <UserProvider>
     <div className="flex h-screen">
       {/* {isLargeScreen && <Sidebar/>} */}
 
@@ -242,5 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
     </div>
+            </UserProvider>
+
   );
 }
