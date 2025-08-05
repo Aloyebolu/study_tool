@@ -20,7 +20,7 @@ connectDB()
       `SELECT id FROM files WHERE id = $1`,
       [fileId]
     );
-    console.log(fileExists)
+    console.log(fileExists)2
     if (fileExists.length === 0) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
