@@ -21,6 +21,11 @@ const snippets = [
     code: `<p style="background-color: yellow;">Yellow background</p>`
   },
   {
+    title: "Border",
+    description: "Border is the boundary within an HTML element, it can be set using the 'border' property together with the width, style and color.",
+    code: `<p style="border: 2px solid blue;">This text has a blue border</p>`
+  },
+  {
     title: "Text Alignment (Inline CSS)",
     description: "Align text to the center using 'text-align'.",
     code: `<p style="text-align: center;">This text is centered</p>`
@@ -180,6 +185,34 @@ const snippets = [
   }
 </style>
 <div class="transparent">Transparent Background</div>`
+  },
+  {
+    title: "Css selectors",
+    description: "Use CSS selectors to style elements based on their type, class, or id.",
+    code: `<style>
+  p { color: blue; } /* All paragraphs */
+  .highlight { background-color: yellow; } /* Class selector */
+  #unique { font-weight: bold; } /* ID selector */
+</style>
+<p>This is a paragraph.</p>
+<p class="highlight">This paragraph is highlighted.</p>
+<p id="unique">This paragraph has a unique style.</p>`
+  },
+  {
+    title: "CSS Variables",
+    description: "Define and use CSS variables for consistent styling.",
+    code: `<style>
+  :root {
+    --main-color: coral;
+    --text-color: white;
+  }
+  .variable-box {
+    background-color: var(--main-color);
+    color: var(--text-color);
+    padding: 20px;
+  }
+</style>
+<div class="variable-box">Box with CSS Variables</div>`
   }
 ];
 
@@ -220,18 +253,18 @@ export default function HTMLSnippetsPage() {
     newOutputs[index] = htmlOutput;
     setOutputs(newOutputs);
   };
-function highlightTags(text: string) {
+  function highlightTags(text: string) {
     return text.replace(/&/g, "&amp;")
-            .replace(/</g, "<span style='color: red'>&lt;")
-            .replace(/>/g, "&gt; </span>");
-  return text
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/</g, "&lt; ") // escape first
-    .replace(/>/g, "&gt; class=\"text-blue-400\">&lt;a&gt;</span>")
-    .replace(/&lt;a&gt;/g, `<span class="text-blue-400">&lt;a&gt;</span>`)
-    .replace(/&lt;\/a&gt;/g, `<span class="text-blue-400">&lt;/a&gt;</span>`);
-}
+      .replace(/</g, "<span style='color: red'>&lt;")
+      .replace(/>/g, "&gt; </span>");
+    return text
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/</g, "&lt; ") // escape first
+      .replace(/>/g, "&gt; class=\"text-blue-400\">&lt;a&gt;</span>")
+      .replace(/&lt;a&gt;/g, `<span class="text-blue-400">&lt;a&gt;</span>`)
+      .replace(/&lt;\/a&gt;/g, `<span class="text-blue-400">&lt;/a&gt;</span>`);
+  }
 
   return (
     <div className="min-h-screen bg-black  p-6 font-mono">
@@ -243,9 +276,9 @@ function highlightTags(text: string) {
             <h2 className="text-xl font-semibold  mb-2">{snippet.title}</h2>
             {/* <p className="text-green-500 mb-4">{snippet.description}</p> */}
             <p
-  className=" mb-4"
-  dangerouslySetInnerHTML={{ __html: highlightTags(snippet.description) }}
-/>
+              className=" mb-4"
+              dangerouslySetInnerHTML={{ __html: highlightTags(snippet.description) }}
+            />
 
 
             <Editor
